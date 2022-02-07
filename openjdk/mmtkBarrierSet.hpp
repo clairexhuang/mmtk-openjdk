@@ -36,13 +36,16 @@
 #include "oops/oopsHierarchy.hpp"
 #include "utilities/fakeRttiSupport.hpp"
 
-#define MMTK_ENABLE_ALLOCATION_FASTPATH true
+// CHANGED
+// force slow path
+#define MMTK_ENABLE_ALLOCATION_FASTPATH false
 
 const intptr_t ALLOC_BIT_BASE_ADDRESS = GLOBAL_ALLOC_BIT_ADDRESS;
 
 class MMTkBarrierSetRuntime: public CHeapObj<mtGC> {
 public:
   virtual void record_modified_node(oop object) {};
+  virtual void record_arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, oop* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, oop* dst_raw, size_t length) {};
   virtual bool is_slow_path_call(address call) {
     return false;
   }
@@ -159,14 +162,46 @@ public:
     }
 
     template <typename T>
+    static bool oop_arraycopy_in_heap_impl(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
+                                      arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
+                                      size_t length) {
+      runtime()->record_arraycopy(src_obj, src_offset_in_bytes, (oop*) src_raw, dst_obj, dst_offset_in_bytes, (oop*) dst_raw, length);
+      return Raw::oop_arraycopy(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
+    }
+
+
+    static bool oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, oop* src_raw,
+                                      arrayOop dst_obj, size_t dst_offset_in_bytes, oop* dst_raw,
+                                      size_t length) {
+      return oop_arraycopy_in_heap_impl(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
+    }
+    static bool oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, arrayOop* src_raw,
+                                      arrayOop dst_obj, size_t dst_offset_in_bytes, arrayOop* dst_raw,
+                                      size_t length) {
+      return oop_arraycopy_in_heap_impl(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
+    }
+    static bool oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, instanceOop* src_raw,
+                                      arrayOop dst_obj, size_t dst_offset_in_bytes, instanceOop* dst_raw,
+                                      size_t length) {
+      return oop_arraycopy_in_heap_impl(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
+    }
+    static bool oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, objArrayOop* src_raw,
+                                      arrayOop dst_obj, size_t dst_offset_in_bytes, objArrayOop* dst_raw,
+                                      size_t length) {
+      return oop_arraycopy_in_heap_impl(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
+    }
+    static bool oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, typeArrayOop* src_raw,
+                                      arrayOop dst_obj, size_t dst_offset_in_bytes, typeArrayOop* dst_raw,
+                                      size_t length) {
+      return oop_arraycopy_in_heap_impl(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
+    }
+
+    template <typename T>
     static bool oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
                                       arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
                                       size_t length) {
-      bool result = Raw::oop_arraycopy(src_obj, src_offset_in_bytes, src_raw,
-                                       dst_obj, dst_offset_in_bytes, dst_raw,
-                                       length);
-      runtime()->record_modified_node((oop) dst_obj);
-      return result;
+      runtime()->record_arraycopy(src_obj, src_offset_in_bytes, (oop*) src_raw, dst_obj, dst_offset_in_bytes, (oop*) dst_raw, length);
+      return Raw::oop_arraycopy(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
     }
 
     static void clone_in_heap(oop src, oop dst, size_t size) {

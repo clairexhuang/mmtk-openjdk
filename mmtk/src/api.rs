@@ -20,12 +20,16 @@ use std::lazy::SyncLazy;
 // Supported barriers:
 static NO_BARRIER: SyncLazy<CString> = SyncLazy::new(|| CString::new("NoBarrier").unwrap());
 static OBJECT_BARRIER: SyncLazy<CString> = SyncLazy::new(|| CString::new("ObjectBarrier").unwrap());
+//ADDED
+static FIELD_LOGGING_BARRIER: SyncLazy<CString> = SyncLazy::new(|| CString::new("FieldLoggingBarrier").unwrap());
 
 #[no_mangle]
 pub extern "C" fn mmtk_active_barrier() -> *const c_char {
     match SINGLETON.get_plan().constraints().barrier {
         BarrierSelector::NoBarrier => NO_BARRIER.as_ptr(),
         BarrierSelector::ObjectBarrier => OBJECT_BARRIER.as_ptr(),
+        //ADDED
+        BarrierSelector::FieldLoggingBarrier =>FIELD_LOGGING_BARRIER.as_ptr(),
         // In case we have more barriers in mmtk-core.
         #[allow(unreachable_patterns)]
         _ => unimplemented!(),
@@ -253,12 +257,27 @@ pub extern "C" fn executable() -> bool {
     true
 }
 
+//CHANGED
 #[no_mangle]
 pub extern "C" fn record_modified_node(
     mutator: &'static mut Mutator<OpenJDK>,
-    obj: ObjectReference,
+    src: ObjectReference,
+    slot: Address,
+    val: ObjectReference
 ) {
-    mutator.record_modified_node(obj);
+    unreachable!();
+    mutator.record_modified_node(src,slot,val);
+}
+
+//ADDED
+#[no_mangle]
+pub extern "C" fn mmtk_object_reference_write(
+    mutator: &'static mut Mutator<OpenJDK>,
+    src: ObjectReference,
+    slot: Address,
+    val: ObjectReference,
+) {
+    //mutator.record_modified_node(src, slot, val);
 }
 
 // finalization
@@ -273,4 +292,16 @@ pub extern "C" fn get_finalized_object() -> ObjectReference {
         Some(obj) => obj,
         None => unsafe { Address::ZERO.to_object_reference() },
     }
+}
+
+#[no_mangle]
+pub extern "C" fn mmtk_object_reference_arraycopy(
+    mutator: &'static mut Mutator<OpenJDK>,
+    src: ObjectReference,
+    src_offset: usize,
+    dst: ObjectReference,
+    dst_offset: usize,
+    len: usize,
+) {
+    //mutator.object_reference_arraycopy(src, src_offset, dst, dst_offset, len);
 }

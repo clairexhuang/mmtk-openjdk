@@ -12,6 +12,10 @@ extern "C" {
 typedef void* MMTk_Mutator;
 typedef void* MMTk_TraceLocal;
 
+// ADDED
+extern void mmtk_object_reference_write(MMTk_Mutator mutator, void* src, void* slot, void* val);
+extern void mmtk_object_reference_arraycopy(MMTk_Mutator mutator, void* src, size_t src_offset, void* dst, size_t dst_offset, size_t len);
+
 extern const uintptr_t GLOBAL_SIDE_METADATA_BASE_ADDRESS;
 extern const uintptr_t GLOBAL_SIDE_METADATA_VM_BASE_ADDRESS;
 extern const uintptr_t GLOBAL_ALLOC_BIT_ADDRESS;

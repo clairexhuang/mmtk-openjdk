@@ -277,7 +277,7 @@ pub extern "C" fn mmtk_object_reference_write(
     slot: Address,
     val: ObjectReference,
 ) {
-    //mutator.record_modified_node(src, slot, val);
+    mutator.record_modified_node(src, slot, val);
 }
 
 // finalization
@@ -303,5 +303,5 @@ pub extern "C" fn mmtk_object_reference_arraycopy(
     dst_offset: usize,
     len: usize,
 ) {
-    //mutator.object_reference_arraycopy(src, src_offset, dst, dst_offset, len);
+    mutator.object_reference_arraycopy(src, src_offset, dst, dst_offset, len);
 }

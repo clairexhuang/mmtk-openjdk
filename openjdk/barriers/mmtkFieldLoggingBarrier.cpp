@@ -144,14 +144,14 @@ void MMTkFieldLoggingBarrierSetAssembler::record_modified_node(MacroAssembler* m
   //__ movb(tmp5, Address(tmp5,0));
   __ movb(tmp5, Address(tmp5, tmp3));
   // tmp3 = (obj >> 3) & 7
-  //__ lea(tmp3, dst);
-  //__ shrptr(tmp3, 3);
-  //__ andptr(tmp3, 7);
+  __ lea(tmp3, dst);
+  __ shrptr(tmp3, 3);
+  __ andptr(tmp3, 7);
   // tmp5 = tmp5 >> tmp3
-  //__ movptr(tmp4, rcx);
-  //__ movl(rcx, tmp3);
-  //__ shrptr(tmp5);
-  //__ movptr(rcx, tmp4);
+  __ movptr(tmp4, rcx);
+  __ movl(rcx, tmp3);
+  __ shrptr(tmp5);
+  __ movptr(rcx, tmp4);
   // if ((tmp5 & 1) == 1) goto slowpath;
   __ andptr(tmp5, 1);
   __ cmpptr(tmp5, kUnloggedValue);
@@ -307,7 +307,7 @@ void MMTkFieldLoggingBarrierSetC2::record_modified_node(GraphKit* kit, Node* src
 
   MMTkIdealKit ideal(kit, true);
 
-#if MMTK_ENABLE_BARRIER_FASTPATH && false
+#if MMTK_ENABLE_BARRIER_FASTPATH
   Node* no_base = __ top();
   float unlikely  = PROB_UNLIKELY(0.999);
 

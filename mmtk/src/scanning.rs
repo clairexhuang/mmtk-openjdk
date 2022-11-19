@@ -8,6 +8,7 @@ use mmtk::util::{Address, ObjectReference};
 use mmtk::vm::{EdgeVisitor, RootsWorkFactory, Scanning};
 use mmtk::Mutator;
 use mmtk::MutatorContext;
+use probe::probe;
 
 pub struct VMScanning {}
 
@@ -41,6 +42,23 @@ pub(crate) fn to_edges_closure<F: RootsWorkFactory<OpenJDKEdge>>(factory: &mut F
     }
 }
 
+// store edges for every object 
+struct SaveEdges {
+    edges: Vec<OpenJDKEdge>
+}
+
+impl EdgeVisitor<OpenJDKEdge> for SaveEdges {
+    fn visit_edge(&mut self, edge: OpenJDKEdge) {
+        self.edges.push(edge)
+    }
+}
+
+impl SaveEdges {
+    fn new() -> Self {
+        // return save edges instance of empty vector 
+        SaveEdges { edges: vec![] }
+    }
+}
 impl Scanning<OpenJDK> for VMScanning {
     const SCAN_MUTATORS_IN_SAFEPOINT: bool = false;
     const SINGLE_THREAD_MUTATOR_SCANNING: bool = false;
@@ -50,7 +68,13 @@ impl Scanning<OpenJDK> for VMScanning {
         object: ObjectReference,
         edge_visitor: &mut EV,
     ) {
-        crate::object_scanning::scan_object(object, edge_visitor, tls)
+        let mut save_edges = SaveEdges::new();
+        crate::object_scanning::scan_object(object, &mut save_edges, tls);
+        probe!(mmtk, scan_object, save_edges.edges.len());
+        // println!("scan object {}", save_edges.edges.len());
+        for edge in save_edges.edges {
+            edge_visitor.visit_edge(edge);
+        }
     }
 
     fn notify_initial_thread_scan_complete(_partial_scan: bool, _tls: VMWorkerThread) {

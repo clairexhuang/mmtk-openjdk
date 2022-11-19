@@ -3,6 +3,8 @@ extern crate mmtk;
 #[macro_use]
 extern crate lazy_static;
 extern crate once_cell;
+// add probe dependencies
+extern crate probe;
 
 use std::collections::HashMap;
 use std::ops::Range;

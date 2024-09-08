@@ -228,5 +228,6 @@ fn set_compressed_pointer_vm_layout(builder: &mut MMTKBuilder) {
         log_space_extent: 31,
         force_use_contiguous_spaces: false,
     };
+    println!("{:?}", constants);
     builder.set_vm_layout(constants);
 }

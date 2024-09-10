@@ -37,7 +37,7 @@ cfg-if = "1.0"
 # But other changes including adding/removing whitespaces in commented lines may break the CI.
 # mmtk = { git = "https://github.com/mmtk/mmtk-core.git", rev = "a3a72f8e5795678eff06fdc1524f0b429a62ccc0" }
 # Uncomment the following to build locally
-mmtk = { path = "../../angus-mmtk-core", features = ['perf_counter'] }
+mmtk = { path = "../../mmtk-core", features = ['perf_counter'] }
 
 [build-dependencies]
 built = { version = "0.7.1", features = ["git2"] }
@@ -59,6 +59,8 @@ forwarding_bits_on_side = []
 
 # Use malloc mark sweep - we should only run marksweep with this feature turned on.
 malloc_mark_sweep = ["mmtk/malloc_mark_sweep"]
+
+# immix_non_moving = ["mmtk/immix_non_moving"]
 
 # We can select plan at runtime. So no need to use any of these features.
 # However, if any of these is provided during build-time, we will ignore any runtime flag and
